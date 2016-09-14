@@ -27,7 +27,9 @@ using namespace utils;
 
 
 void bench(int howmany, std::shared_ptr<spdlog::logger> log);
+void bench_stream(int howmany, std::shared_ptr<spdlog::logger> log);
 void bench_mt(int howmany, std::shared_ptr<spdlog::logger> log, int thread_count);
+void bench_stream_mt(int howmany, std::shared_ptr<spdlog::logger> log, int thread_count);
 
 int main(int argc, char* argv[])
 {
@@ -59,6 +61,16 @@ int main(int argc, char* argv[])
         bench(howmany, daily_st);
         bench(howmany, spdlog::create<null_sink_st>("null_st"));
 
+        cout << "*******************************************************************************\n";
+        cout << "Single thread, STREAM " << format(howmany)  << " iterations" << endl;
+        cout << "*******************************************************************************\n";
+
+        auto rotating2_st = spdlog::rotating_logger_st("rotating2_st", "logs/rotating2_st", file_size, rotating_files);
+        bench_stream(howmany, rotating2_st);
+        auto daily2_st = spdlog::daily_logger_st("daily2_st", "logs/daily2_st");
+        bench_stream(howmany, daily2_st);
+        bench_stream(howmany, spdlog::create<null_sink_st>("null2_st"));
+
         cout << "\n*******************************************************************************\n";
         cout << threads << " threads sharing same logger, " << format(howmany)  << " iterations" << endl;
         cout << "*******************************************************************************\n";
@@ -72,9 +84,19 @@ int main(int argc, char* argv[])
         bench(howmany, spdlog::create<null_sink_st>("null_mt"));
 
         cout << "\n*******************************************************************************\n";
-        cout << "async logging.. " << threads << " threads sharing same logger, " << format(howmany) << " iterations " << endl;
+        cout << threads << " threads sharing same logger, STREAM " << format(howmany)  << " iterations" << endl;
         cout << "*******************************************************************************\n";
 
+        auto rotating2_mt = spdlog::rotating_logger_mt("rotating2_mt", "logs/rotating2_mt", file_size, rotating_files);
+        bench_stream_mt(howmany, rotating2_mt, threads);
+
+        auto daily2_mt = spdlog::daily_logger_mt("daily2_mt", "logs/daily2_mt");
+        bench_stream_mt(howmany, daily2_mt, threads);
+        bench(howmany, spdlog::create<null_sink_st>("null2_mt"));
+
+        cout << "\n*******************************************************************************\n";
+        cout << "async logging.. " << threads << " threads sharing same logger, " << format(howmany) << " iterations " << endl;
+        cout << "*******************************************************************************\n";
 
         spdlog::set_async_mode(queue_size);
 
@@ -103,13 +125,53 @@ void bench(int howmany, std::shared_ptr<spdlog::logger> log)
     {
         log->info("Hello logger: msg number {}", i);
     }
-
-
     auto delta = system_clock::now() - start;
     auto delta_d = duration_cast<duration<double>> (delta).count();
     cout << format(int(howmany / delta_d)) << "/sec" << endl;
 }
 
+void bench_stream(int howmany, std::shared_ptr<spdlog::logger> log)
+{
+    cout << log->name() << "...\t\t" << flush;
+    auto start = system_clock::now();
+    for (auto i = 0; i < howmany; ++i)
+    {
+        LOG_INFO(log, "Hello logger: msg number" << i);
+    }
+    auto delta = system_clock::now() - start;
+    auto delta_d = duration_cast<duration<double>> (delta).count();
+    cout << format(int(howmany / delta_d)) << "/sec" << endl;
+}
+
+void bench_stream_mt(int howmany, std::shared_ptr<spdlog::logger> log, int thread_count)
+{
+
+    cout << log->name() << "...\t\t" << flush;
+    std::atomic<int > msg_counter {0};
+    vector<thread> threads;
+    auto start = system_clock::now();
+    for (int t = 0; t < thread_count; ++t)
+    {
+        threads.push_back(std::thread([&]()
+        {
+            for(;;)
+            {
+                int counter = ++msg_counter;
+                if (counter > howmany) break;
+                LOG_INFO(log, "Hello logger: msg number" << counter);
+            }
+        }));
+    }
+
+    for(auto &t:threads)
+    {
+        t.join();
+    };
+
+    auto delta = system_clock::now() - start;
+    auto delta_d = duration_cast<duration<double>> (delta).count();
+    cout << format(int(howmany / delta_d)) << "/sec" << endl;
+}
 
 void bench_mt(int howmany, std::shared_ptr<spdlog::logger> log, int thread_count)
 {
@@ -131,12 +193,10 @@ void bench_mt(int howmany, std::shared_ptr<spdlog::logger> log, int thread_count
         }));
     }
 
-
     for(auto &t:threads)
     {
         t.join();
     };
-
 
     auto delta = system_clock::now() - start;
     auto delta_d = duration_cast<duration<double>> (delta).count();

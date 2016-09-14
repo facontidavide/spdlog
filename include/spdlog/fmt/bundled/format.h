@@ -632,7 +632,7 @@ inline typename MakeUnsigned<Int>::Type to_unsigned(Int value)
 
 // The number of characters to store in the MemoryBuffer object itself
 // to avoid dynamic memory allocation.
-enum { INLINE_BUFFER_SIZE = 500 };
+enum { INLINE_BUFFER_SIZE = 256 };
 
 #if FMT_SECURE_SCL
 // Use checked iterator to avoid warnings on MSVC.

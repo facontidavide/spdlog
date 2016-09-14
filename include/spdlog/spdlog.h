@@ -161,6 +161,40 @@ void drop_all();
 #endif
 
 
+class LogStreamer
+{
+public:
+
+    LogStreamer(std::shared_ptr<spdlog::logger>& logger, spdlog::level::level_enum lvl ):
+        logger_(logger), lvl_(lvl) {}
+
+    template <typename T> LogStreamer& operator<<(T const & value)
+    {
+        buffer_ << value;
+        return *this;
+    }
+
+    template <typename T> LogStreamer& operator<<(T&& value)
+    {
+        buffer_ << value;
+        return *this;
+    }
+
+    ~LogStreamer(){ logger_->log(lvl_, buffer_.c_str()); }
+
+protected:
+    fmt::MemoryWriter buffer_;
+    std::shared_ptr<spdlog::logger>& logger_;
+    spdlog::level::level_enum     lvl_;
+};
+
+
+
+#define LOG_LVL(console, lvl, ...) {/*if(console->should_log(lvl)) */{LogStreamer(console, lvl) << __VA_ARGS__ ;} }
+#define LOG_INFO(console, ...) LOG_LVL(console,  spdlog::level::info, __VA_ARGS__ );
+#define LOG_TRACE(console, ...) LOG_LVL(console,  spdlog::level::trace, __VA_ARGS__ );
+#define LOG_ERROR(console, ...) LOG_LVL(console,  spdlog::level::err, __VA_ARGS__ );
+
 }
 
 
