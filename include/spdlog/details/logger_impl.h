@@ -12,12 +12,9 @@
 #include <string>
 
 
-// create logger with given name, sinks and the default pattern formatter
-// all other ctors will call this one
-template<class It>
-inline spdlog::logger::logger(const std::string& logger_name, const It& begin, const It& end):
+// ctor with NO sink
+inline spdlog::logger::logger(const std::string& logger_name):
     _name(logger_name),
-    _sinks(begin, end),
     _formatter(std::make_shared<pattern_formatter>("%+"))
 {
     _level = level::info;
@@ -27,6 +24,15 @@ inline spdlog::logger::logger(const std::string& logger_name, const It& begin, c
     {
         this->_default_err_handler(msg);
     };
+}
+
+// create logger with given name, sinks and the default pattern formatter
+// all other ctors will call this one
+template<class It>
+inline spdlog::logger::logger(const std::string& logger_name, const It& begin, const It& end):
+    logger(logger_name)
+{
+    std::copy(begin, end, std::back_inserter(_sinks));
 }
 
 // ctor with sinks as init list
@@ -42,6 +48,7 @@ inline spdlog::logger::logger(const std::string& logger_name, spdlog::sink_ptr s
     single_sink
 })
 {}
+
 
 
 inline spdlog::logger::~logger() = default;

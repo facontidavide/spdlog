@@ -22,6 +22,8 @@
 namespace spdlog
 {
 
+class comp_logger;
+
 class logger
 {
 public:
@@ -86,6 +88,10 @@ protected:
     spdlog::level_t _flush_level;
     log_err_handler _err_handler;
     std::atomic<time_t> _last_err_time;
+
+    logger(const std::string& logger_name);
+
+    friend class comp_logger;
 };
 }
 

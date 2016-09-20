@@ -11,6 +11,7 @@
 #include <spdlog/tweakme.h>
 #include <spdlog/common.h>
 #include <spdlog/logger.h>
+#include <spdlog/comp_logger.h>
 
 #include <memory>
 #include <functional>
