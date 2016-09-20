@@ -15,6 +15,7 @@
 #include <spdlog/sinks/syslog_sink.h>
 #include <spdlog/sinks/ansicolor_sink.h>
 #include <spdlog/sinks/android_sink.h>
+#include <spdlog/sinks/rosbag_sinks.h>
 
 #include <chrono>
 #include <functional>
@@ -96,6 +97,21 @@ inline std::shared_ptr<spdlog::logger> spdlog::stderr_logger_st(const std::strin
 {
     return create_console_logger(logger_name, sinks::stderr_sink_st::instance(), color);
 }
+
+
+inline std::shared_ptr<spdlog::logger> spdlog::rosbag_logger(const std::string& logger_name, const filename_t& filename)
+{
+    sink_ptr sink = std::make_shared<spdlog::sinks::rosbag_sink_mt>(logger_name, filename, SPDLOG_FILENAME_T("bag") );
+    return details::registry::instance().create(logger_name, { sink });
+}
+
+inline std::shared_ptr<spdlog::logger> spdlog::rotating_rosbag_logger(const std::string& logger_name, const filename_t& filename, size_t max_file_size, size_t max_files)
+{
+    sink_ptr sink = std::make_shared<spdlog::sinks::rotating_rosbag_sink_mt>(logger_name, filename, SPDLOG_FILENAME_T("bag"), max_file_size, max_files );
+    return details::registry::instance().create(logger_name, { sink });
+}
+
+
 
 #ifdef SPDLOG_ENABLE_SYSLOG
 // Create syslog logger

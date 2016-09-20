@@ -94,6 +94,11 @@ std::shared_ptr<logger> stdout_logger_st(const std::string& logger_name, bool co
 std::shared_ptr<logger> stderr_logger_mt(const std::string& logger_name, bool color = false);
 std::shared_ptr<logger> stderr_logger_st(const std::string& logger_name, bool color = false);
 
+//
+// Create and register multi/single threaded basic rosbag logger.
+std::shared_ptr<logger> rosbag_logger(const std::string& logger_name, const filename_t& filename);
+std::shared_ptr<logger> rotating_rosbag_logger(const std::string& logger_name, const filename_t& filename, size_t max_file_size, size_t max_files);
+
 
 //
 // Create and register a syslog logger
