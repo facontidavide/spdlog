@@ -41,13 +41,15 @@ public:
     close();
   }
 
-  void open(const filename_t& filename, bool truncate = false)
+  void open(const filename_t& filename, bool truncate = true)
   {
     _filename = filename;
+
     if(truncate)
       _bag.open( filename, rosbag::bagmode::Write);
     else
       _bag.open( filename, rosbag::bagmode::Append);
+
 
     _bag.setCompression( rosbag::CompressionType::LZ4 );
   }
@@ -98,7 +100,7 @@ protected:
     auto data = msg.formatted.data();
 
     _log_msg.message = std::string( data, msg_size);
-    _log_msg.level = static_cast<uint8_t>( this->level() );
+    _log_msg.level = static_cast<uint8_t>( msg.level );
     _log_msg.stamp = now;
 
     _bag_helper.write(_log_msg);
@@ -145,9 +147,8 @@ protected:
     auto data = msg.formatted.data();
 
     _log_msg.message = std::string( data, msg_size);
-    _log_msg.level = static_cast<uint8_t>( this->level() );
+    _log_msg.level = static_cast<uint8_t>( msg.level );
     _log_msg.stamp = now;
-
 
     _current_size += _log_msg.message.size() + _log_msg.node_name.size() +  _log_msg.logger_name.size() + sizeof(now);
     if (_current_size > _max_size)

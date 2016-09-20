@@ -16,6 +16,7 @@
 #include <spdlog/sinks/ansicolor_sink.h>
 #include <spdlog/sinks/android_sink.h>
 #include <spdlog/sinks/rosbag_sinks.h>
+#include <spdlog/sinks/rosout_sink.h>
 
 #include <chrono>
 #include <functional>
@@ -99,6 +100,9 @@ inline std::shared_ptr<spdlog::logger> spdlog::stderr_logger_st(const std::strin
 }
 
 
+#define USE_ROS
+#ifdef USE_ROS
+
 inline std::shared_ptr<spdlog::logger> spdlog::rosbag_logger(const std::string& logger_name, const filename_t& filename)
 {
     sink_ptr sink = std::make_shared<spdlog::sinks::rosbag_sink_mt>(logger_name, filename, SPDLOG_FILENAME_T("bag") );
@@ -111,6 +115,14 @@ inline std::shared_ptr<spdlog::logger> spdlog::rotating_rosbag_logger(const std:
     return details::registry::instance().create(logger_name, { sink });
 }
 
+inline std::shared_ptr<spdlog::logger> spdlog::rosout_logger(const std::string& logger_name)
+{
+    sink_ptr sink = std::make_shared<spdlog::sinks::rosout_sink_mt>(logger_name );
+    return details::registry::instance().create(logger_name, { sink });
+}
+
+
+#endif
 
 
 #ifdef SPDLOG_ENABLE_SYSLOG
