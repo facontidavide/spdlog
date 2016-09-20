@@ -70,6 +70,9 @@ public:
 
     virtual void flush();
 
+    size_t sinkCount() const { return _sinks.size(); }
+    sink_ptr& sink(size_t index) { return _sinks[index]; }
+
 protected:
     virtual void _sink_it(details::log_msg&);
     virtual void _set_pattern(const std::string&);
