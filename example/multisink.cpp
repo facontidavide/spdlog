@@ -14,25 +14,24 @@ int main(int, char*[])
             // this first example shows a composable logger that contains several simple loggers
             // each of these loggers has their own format, level and pattern.
 
-            std::vector<std::shared_ptr<spdlog::logger> > consoles;
-            consoles.push_back( spd::stdout_logger_mt("toConsole",   true) );
-            consoles.push_back( spd::basic_logger_mt("toRegFile",   "./log_regular_file.txt") );
-            consoles.push_back( spd::basic_logger_mt("toDebugFile", "./log_debug_file.txt") );
-            spdlog::comp_logger console_comp("composed_console",  consoles.begin(), consoles.end() );
+            std::vector<std::shared_ptr<spdlog::logger> > loggers;
 
-            console_comp[0]->set_level( spdlog::level::warn); // console
-            console_comp[1]->set_level( spdlog::level::warn); // regular file
-            console_comp[2]->set_level( spdlog::level::off); // debug file
+            // log to console
+            loggers.push_back( spd::stdout_logger_mt("toConsole",   true) );
+            loggers.back()->set_level( spdlog::level::info);
 
-            console_comp.warn("warn: will print only on console and regular file");
+            // Create a file rotating logger with 10mb size max and 3 rotated files
+            loggers.push_back(spd::rotating_logger_mt("verbose_logger", "logs/log_debug", 1048576 * 10, 5) );
+            loggers.back()->set_level( spdlog::level::debug);
 
-            if( enable_debug )
-            {
-                console_comp[0]->set_level( spdlog::level::debug); // console
-                console_comp[1]->set_level( spdlog::level::debug); // regular file
-                console_comp[2]->set_level( spdlog::level::debug); // debug file
-            }
-            console_comp.debug("Debug: you should see this on console and both files");
+            loggers.push_back( spd::basic_logger_mt("error_logger", "./log_error.txt") );
+            loggers.back()->set_level( spdlog::level::error);
+
+            spdlog::comp_logger comp_logger("composed_logger",  loggers.begin(), loggers.end() );
+
+            comp_logger.warn("This is an info {}", 42);
+            comp_logger.info("This is a warning {}", "hello" );
+            comp_logger.deb("This is a debug {1} / {0} / {1} ", "second", "first");
 
         }
         else{
@@ -61,7 +60,6 @@ int main(int, char*[])
                 sinks[2]->set_level( spdlog::level::debug);  // debug file
             }
             console_multisink.debug("Debug: you should see this on console and both files");
-
         }
 
         // Release and close all loggers
